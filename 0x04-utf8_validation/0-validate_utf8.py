@@ -1,46 +1,37 @@
 #!/usr/bin/python3
-"""
-The minimum operations coding challenge.
-"""
+""" UTF-8 validation """
+
 
 def validUTF8(data):
-    """
-      Args:
-          data (list): list of integers
-      Returns:
-          int: number of bytes consumed by the data
-    """
-    def is_valid_byte(byte, num_bytes):
-        # Check if the byte follows the pattern based on the number of bytes expected
-        if num_bytes == 1:
-            return (byte & 0b10000000) == 0
-        elif num_bytes == 2:
-            return (byte & 0b11000000) == 0b10000000
-        elif num_bytes == 3:
-            return (byte & 0b11100000) == 0b11100000 and (byte & 0b00100000) == 0
-        elif num_bytes == 4:
-            return (byte & 0b11110000) == 0b11110000 and (byte & 0b00001000) == 0
-        return False
-
-    num_bytes = 0
-    for byte in data:
-        if not (0 <= byte <= 255):
-            return False
-
-        if num_bytes == 0:
-            if (byte & 0b10000000) == 0b00000000:
-                continue
-            elif (byte & 0b11100000) == 0b11000000:
-                num_bytes = 1
-            elif (byte & 0b11110000) == 0b11100000:
-                num_bytes = 2
-            elif (byte & 0b11111000) == 0b11110000:
-                num_bytes = 3
-            else:
-                return False
+    """ main function """
+    flag = False
+    jump_list = {30: 3, 14: 4, 6: 5}
+    char_length = {3: 3, 4: 2, 5: 1}
+    list_length = 0
+    if (len(data) == 0) or (len(data) == 1 and data[0] >> 7 == 0):
+        return True
+    for num in data:
+        if list_length:
+            list_length -= 1
         else:
-            if not is_valid_byte(byte, num_bytes):
+            flag = False
+        if len(bin(num)[2:]) == 9:
+            num = int(bin(num)[3:], 2)
+        if num >> 7 != 0 and len(bin(num)[2:]) >= 8:
+            if (not flag and num >> 6 == 2):
                 return False
-            num_bytes -= 1
-
-    return num_bytes == 0
+            elif (flag and num >> 6 != 2):
+                return False
+            for test_point, shift in jump_list.items():
+                if num >> shift == test_point:
+                    list_length = char_length[shift]
+                    break
+            if not (list_length or flag):
+                return False
+            else:
+                flag = True
+        elif num >> 7 == 0 and flag:
+            return False
+    if list_length:
+        return False
+    return True
